@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KanjiMaster - Belajar Bahasa Jepang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8fafc;
+        }
+        .kanji-font {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        .kanji-card:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #ef4444;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="bg-red-600 text-white p-2 rounded-lg">
+                    <span class="text-xl font-bold kanji-font">漢字</span>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900">Kanji<span class="text-red-600">Master</span></h1>
+            </div>
+            <div class="hidden md:flex space-x-6 text-sm font-medium">
+                <a href="#" class="text-red-600 border-b-2 border-red-600 pb-1">Kamus</a>
+                <a href="#" class="hover:text-red-600 transition">Flashcards</a>
+                <a href="#" class="hover:text-red-600 transition">Tentang</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-white border-b">
+        <div class="max-w-6xl mx-auto px-4 py-12 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Pelajari Kanji Lebih Mudah</h2>
+            <p class="text-slate-500 max-w-2xl mx-auto mb-8">Eksplorasi ribuan karakter Kanji dengan cara baca, arti, dan level JLPT yang terorganisir.</p>
+            
+            <!-- Search Bar -->
+            <div class="max-w-xl mx-auto relative">
+                <input type="text" id="searchInput" placeholder="Cari Kanji atau arti (contoh: Air, Fire, 日)..." 
+                    class="w-full px-6 py-4 rounded-full border-2 border-slate-200 focus:border-red-500 focus:outline-none shadow-lg transition text-lg">
+                <button class="absolute right-3 top-3 bg-red-600 text-white p-2 px-6 rounded-full hover:bg-red-700 transition">
+                    Cari
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-10">
+        
+        <!-- Filter Tabs -->
+        <div class="flex flex-wrap gap-2 mb-8 justify-center">
+            <button onclick="filterKanji('all')" class="tab-btn active px-6 py-2 rounded-full bg-slate-900 text-white shadow-md transition" id="btn-all">Semua</button>
+            <button onclick="filterKanji('N5')" class="tab-btn px-6 py-2 rounded-full bg-white border border-slate-200 hover:bg-red-50 transition" id="btn-N5">JLPT N5</button>
+            <button onclick="filterKanji('N4')" class="tab-btn px-6 py-2 rounded-full bg-white border border-slate-200 hover:bg-red-50 transition" id="btn-N4">JLPT N4</button>
+            <button onclick="filterKanji('N3')" class="tab-btn px-6 py-2 rounded-full bg-white border border-slate-200 hover:bg-red-50 transition" id="btn-N3">JLPT N3</button>
+            <button onclick="filterKanji('N2')" class="tab-btn px-6 py-2 rounded-full bg-white border border-slate-200 hover:bg-red-50 transition" id="btn-N2">JLPT N2</button>
+            <button onclick="filterKanji('N1')" class="tab-btn px-6 py-2 rounded-full bg-white border border-slate-200 hover:bg-red-50 transition" id="btn-N1">JLPT N1</button>
+        </div>
+
+        <!-- Kanji Grid -->
+        <div id="kanjiGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <!-- Cards will be injected by JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-20">
+            <div class="text-6xl mb-4">🤔</div>
+            <h3 class="text-xl font-semibold text-slate-600">Kanji tidak ditemukan</h3>
+            <p class="text-slate-400">Coba kata kunci lain.</p>
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeModal()"></div>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div class="h-2 bg-red-600 w-full"></div>
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-900 text-2xl">&times;</button>
+            
+            <div class="p-8">
+                <div class="flex flex-col items-center mb-6">
+                    <span id="modalKanji" class="kanji-font text-8xl font-bold text-slate-900 mb-2">日</span>
+                    <span id="modalJLPT" class="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full uppercase">JLPT N5</span>
+                </div>
+
+                <div class="space-y-4 custom-scrollbar max-h-[400px] overflow-y-auto pr-2">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Arti</h4>
+                        <p id="modalMeaning" class="text-xl font-semibold text-slate-800 capitalize">Matahari, Hari</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 border-t pt-4">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Onyomi</h4>
+                            <p id="modalOnyomi" class="text-red-600 font-medium">ニチ, ジツ</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Kunyomi</h4>
+                            <p id="modalKunyomi" class="text-blue-600 font-medium">ひ, -び, -か</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Contoh Kata</h4>
+                        <div id="modalExamples" class="space-y-2">
+                            <!-- Examples will be injected -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-20 py-10">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm">© 2024 KanjiMaster. Dibuat untuk pecinta Bahasa Jepang.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Sample Data Kanji
+        const kanjiData = [
+            { char: '日', meaning: 'matahari, hari', onyomi: 'ニチ, ジツ', kunyomi: 'ひ, -び, -か', jlpt: 'N5', examples: [{jp: '今日 (kyou)', en: 'hari ini'}, {jp: '日曜日 (nichiyoubi)', en: 'hari Minggu'}] },
+            { char: '一', meaning: 'satu', onyomi: 'イチ, イツ', kunyomi: 'ひと-', jlpt: 'N5', examples: [{jp: '一人 (hitori)', en: 'satu orang'}, {jp: '一番 (ichiban)', en: 'nomor satu'}] },
+            { char: '水', meaning: 'air', onyomi: 'スイ', kunyomi: 'みず', jlpt: 'N5', examples: [{jp: '水曜日 (suiyoubi)', en: 'hari Rabu'}, {jp: '飲み水 (nomimizu)', en: 'air minum'}] },
+            { char: '火', meaning: 'api', onyomi: 'カ', kunyomi: 'ひ, -び', jlpt: 'N5', examples: [{jp: '火曜日 (kayoubi)', en: 'hari Selasa'}, {jp: '花火 (hanabi)', en: 'kembang api'}] },
+            { char: '学', meaning: 'belajar, ilmu', onyomi: 'ガク', kunyomi: 'まな-ぶ', jlpt: 'N5', examples: [{jp: '学生 (gakusei)', en: 'siswa'}, {jp: '大学 (daigaku)', en: 'universitas'}] },
+            { char: '月', meaning: 'bulan', onyomi: 'ゲツ, ガツ', kunyomi: 'つき', jlpt: 'N5', examples: [{jp: '一月 (ichigatsu)', en: 'Januari'}, {jp: '今月 (kongetsu)', en: 'bulan ini'}] },
+            { char: '木', meaning: 'pohon', onyomi: 'ボク, モク', kunyomi: 'き, こ-', jlpt: 'N5', examples: [{jp: '木曜日 (mokuyoubi)', en: 'hari Kamis'}, {jp: '大木 (taiboku)', en: 'pohon besar'}] },
+            { char: '金', meaning: 'emas, uang', onyomi: 'キン, コン', kunyomi: 'かね, かな-', jlpt: 'N5', examples: [{jp: 'お金 (okane)', en: 'uang'}, {jp: '金曜日 (kinyoubi)', en: 'hari Jumat'}] },
+            { char: '土', meaning: 'tanah', onyomi: 'ド, ト', kunyomi: 'つち', jlpt: 'N5', examples: [{jp: '土曜日 (doyoubi)', en: 'hari Sabtu'}, {jp: '土地 (tochi)', en: 'lahan'}] },
+            { char: '人', meaning: 'orang', onyomi: 'ジン, ニン', kunyomi: 'ひと', jlpt: 'N5', examples: [{jp: '日本人 (nihonjin)', en: 'orang Jepang'}, {jp: '大人 (otona)', en: 'dewasa'}] },
+            { char: '私', meaning: 'saya', onyomi: 'シ', kunyomi: 'わたし', jlpt: 'N4', examples: [{jp: '私立 (shiritsu)', en: 'swasta'}] },
+            { char: '飲', meaning: 'minum', onyomi: 'イン', kunyomi: 'の-む', jlpt: 'N4', examples: [{jp: '飲み物 (nomimono)', en: 'minuman'}] },
+            { char: '食', meaning: 'makan', onyomi: 'ショク', kunyomi: 'た-べる', jlpt: 'N4', examples: [{jp: '食べ物 (tabemono)', en: 'makanan'}] },
+            { char: '情', meaning: 'perasaan, emosi', onyomi: 'ジョウ', kunyomi: 'なさ-け', jlpt: 'N3', examples: [{jp: '感情 (kanjou)', en: 'emosi'}, {jp: '情報 (jouhou)', en: 'informasi'}] },
+            { char: '恋', meaning: 'cinta, asmara', onyomi: 'レン', kunyomi: 'こい', jlpt: 'N2', examples: [{jp: '恋人 (koibito)', en: 'pacar'}] },
+            { char: '夢', meaning: 'mimpi', onyomi: 'ム', kunyomi: 'ゆめ', jlpt: 'N2', examples: [{jp: '夢中 (muchuu)', en: 'tergila-gila'}] },
+            { char: '響', meaning: 'gema, pengaruh', onyomi: 'キョウ', kunyomi: 'ひび-く', jlpt: 'N1', examples: [{jp: '影響 (eikyou)', en: 'pengaruh'}] }
+        ];
+
+        let currentFilter = 'all';
+        const grid = document.getElementById('kanjiGrid');
+        const searchInput = document.getElementById('searchInput');
+        const emptyState = document.getElementById('emptyState');
+
+        function renderKanji(data) {
+            grid.innerHTML = '';
+            if (data.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            data.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'kanji-card bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center cursor-pointer transition-all hover:shadow-md hover:border-red-200 group';
+                card.onclick = () => showDetail(item);
+                
+                card.innerHTML = `
+                    <span class="text-xs font-bold text-slate-400 mb-2">${item.jlpt}</span>
+                    <span class="kanji-font text-4xl font-bold text-slate-800 mb-2 group-hover:text-red-600 transition">${item.char}</span>
+                    <span class="text-sm text-slate-500 text-center line-clamp-1 capitalize">${item.meaning}</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterKanji(level) {
+            currentFilter = level;
+            
+            // UI Update tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-900', 'text-white', 'shadow-md');
+                btn.classList.add('bg-white', 'text-slate-800', 'border-slate-200');
+            });
+            const activeBtn = document.getElementById(`btn-${level}`);
+            activeBtn.classList.remove('bg-white', 'border-slate-200');
+            activeBtn.classList.add('bg-slate-900', 'text-white', 'shadow-md');
+
+            applySearchAndFilter();
+        }
+
+        function applySearchAndFilter() {
+            const query = searchInput.value.toLowerCase();
+            let filtered = kanjiData;
+
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(k => k.jlpt === currentFilter);
+            }
+
+            if (query) {
+                filtered = filtered.filter(k => 
+                    k.char.includes(query) || 
+                    k.meaning.toLowerCase().includes(query) ||
+                    k.onyomi.toLowerCase().includes(query) ||
+                    k.kunyomi.toLowerCase().includes(query)
+                );
+            }
+
+            renderKanji(filtered);
+        }
+
+        searchInput.addEventListener('input', applySearchAndFilter);
+
+        // Modal Logic
+        function showDetail(kanji) {
+            document.getElementById('modalKanji').innerText = kanji.char;
+            document.getElementById('modalMeaning').innerText = kanji.meaning;
+            document.getElementById('modalOnyomi').innerText = kanji.onyomi;
+            document.getElementById('modalKunyomi').innerText = kanji.kunyomi;
+            document.getElementById('modalJLPT').innerText = `JLPT ${kanji.jlpt}`;
+            
+            const examplesContainer = document.getElementById('modalExamples');
+            examplesContainer.innerHTML = '';
+            
+            kanji.examples.forEach(ex => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-50 p-3 rounded-lg flex justify-between items-center text-sm';
+                div.innerHTML = `
+                    <span class="kanji-font font-bold text-slate-700">${ex.jp}</span>
+                    <span class="text-slate-500 italic">${ex.en}</span>
+                `;
+                examplesContainer.appendChild(div);
+            });
+
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Initialize
+        window.onload = () => {
+            renderKanji(kanjiData);
+        };
+    </script>
+</body>
+</html>
